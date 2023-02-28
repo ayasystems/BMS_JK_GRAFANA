@@ -1,0 +1,164 @@
+[
+    {
+        "id": "56f7a9b1dd48d42a",
+        "type": "tab",
+        "label": "JK BMS",
+        "disabled": false,
+        "info": "",
+        "env": []
+    },
+    {
+        "id": "6f5563d282e21064",
+        "type": "mqtt in",
+        "z": "56f7a9b1dd48d42a",
+        "name": "",
+        "topic": "jk-bms/sensor/#",
+        "qos": "0",
+        "datatype": "utf8",
+        "broker": "693435a185853a35",
+        "nl": false,
+        "rap": true,
+        "rh": 0,
+        "inputs": 0,
+        "x": 160,
+        "y": 340,
+        "wires": [
+            [
+                "40359cc7d684b60b"
+            ]
+        ]
+    },
+    {
+        "id": "40359cc7d684b60b",
+        "type": "switch",
+        "z": "56f7a9b1dd48d42a",
+        "name": "",
+        "property": "topic",
+        "propertyType": "msg",
+        "rules": [
+            {
+                "t": "cont",
+                "v": "_delta_cell_voltage/",
+                "vt": "str"
+            },
+            {
+                "t": "cont",
+                "v": "jk-bms_cell_voltage_",
+                "vt": "str"
+            }
+        ],
+        "checkall": "true",
+        "repair": false,
+        "outputs": 2,
+        "x": 410,
+        "y": 340,
+        "wires": [
+            [],
+            [
+                "f0b5b7e5f5ba0bc0"
+            ]
+        ]
+    },
+    {
+        "id": "f0b5b7e5f5ba0bc0",
+        "type": "function",
+        "z": "56f7a9b1dd48d42a",
+        "name": "Enviar datos a influx",
+        "func": "\nlet cellInfo = flow.get(\"cellInfo\") || {};\nlet value = parseFloat(msg.payload);\nlet splitedTopic = msg.topic.split('/');\n\n//jk-bms_cell_voltage_5\n\nmsg.payload = {};\nlet length = splitedTopic[2].length;\nlet celda = \"Celda_\" ;\nlet celdaNum = parseInt(splitedTopic[2].substring(20, length));\nif (celdaNum < 10){\n    celda = celda + \"0\" + celdaNum;\n}else{\n    celda = celda  + celdaNum;\n}\n//msg.payload.topic = splitedTopic;\n \n \ncellInfo[msg.payload.celda] = value;\n\nflow.set(\"cellInfo\",cellInfo);\n\nmsg.payload = {};\nmsg.tags = {};\nmsg.tags.celda = celda;\nmsg.payload.celda = celda;\nmsg.payload.volt = value;\n\n\nmsg.payload = [{ volaje: value, num: celdaNum }, { celda: celda }];\n\n\nreturn msg;",
+        "outputs": 1,
+        "noerr": 0,
+        "initialize": "",
+        "finalize": "",
+        "libs": [],
+        "x": 620,
+        "y": 340,
+        "wires": [
+            [
+                "910606d7b4c2637a"
+            ]
+        ]
+    },
+    {
+        "id": "910606d7b4c2637a",
+        "type": "influxdb out",
+        "z": "56f7a9b1dd48d42a",
+        "influxdb": "3f843be6016a9c47",
+        "name": "",
+        "measurement": "BMS",
+        "precision": "",
+        "retentionPolicy": "",
+        "database": "database",
+        "precisionV18FluxV20": "ms",
+        "retentionPolicyV18Flux": "",
+        "org": "organisation",
+        "bucket": "bucket",
+        "x": 870,
+        "y": 460,
+        "wires": []
+    },
+    {
+        "id": "b314ae297eebd3c6",
+        "type": "comment",
+        "z": "56f7a9b1dd48d42a",
+        "name": "@EA4GKQ",
+        "info": "https://github.com/ayasystems/BMS_JK_GRAFANA",
+        "x": 430,
+        "y": 280,
+        "wires": []
+    },
+    {
+        "id": "693435a185853a35",
+        "type": "mqtt-broker",
+        "name": "mqtt",
+        "broker": "192.168.0.150",
+        "port": "1883",
+        "clientid": "",
+        "autoConnect": true,
+        "usetls": false,
+        "protocolVersion": "4",
+        "keepalive": "60",
+        "cleansession": true,
+        "birthTopic": "",
+        "birthQos": "0",
+        "birthPayload": "",
+        "birthMsg": {},
+        "closeTopic": "",
+        "closeQos": "0",
+        "closePayload": "",
+        "closeMsg": {},
+        "willTopic": "",
+        "willQos": "0",
+        "willPayload": "",
+        "willMsg": {},
+        "userProps": "",
+        "sessionExpiry": ""
+    },
+    {
+        "id": "3f843be6016a9c47",
+        "type": "influxdb",
+        "hostname": "192.168.0.11",
+        "port": "8086",
+        "protocol": "http",
+        "database": "jk_db",
+        "name": "",
+        "usetls": false,
+        "tls": "e117f4d3.e6bc88",
+        "influxdbVersion": "1.x",
+        "url": "http://localhost:8086",
+        "rejectUnauthorized": true
+    },
+    {
+        "id": "e117f4d3.e6bc88",
+        "type": "tls-config",
+        "name": "",
+        "cert": "",
+        "key": "",
+        "ca": "",
+        "certname": "",
+        "keyname": "",
+        "caname": "",
+        "servername": "mqtt.local",
+        "verifyservercert": false,
+        "alpnprotocol": ""
+    }
+]
